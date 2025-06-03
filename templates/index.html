@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Graphiques évolution des fonds et des indices boursiers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto py-8 px-4">
+      <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">
+        Graphiques évolution des fonds et des indices boursiers
+      </h1>
+
+      <section
+        id="periode-selector"
+        class="mb-8 p-4 bg-white rounded-lg shadow flex flex-wrap justify-center items-center gap-x-6 gap-y-3"
+      >
+        <span class="font-semibold text-gray-700 mr-3">Période:</span>
+        <label class="inline-flex items-center cursor-pointer">
+          <input
+            type="radio"
+            name="periode"
+            value="0"
+            class="form-radio text-indigo-600 h-4 w-4"
+          />
+          <span class="ml-2 text-gray-700">15 jours</span>
+        </label>
+        <label class="inline-flex items-center cursor-pointer">
+          <input
+            type="radio"
+            name="periode"
+            value="1"
+            class="form-radio text-indigo-600 h-4 w-4"
+            checked
+          />
+          <span class="ml-2 text-gray-700">1 mois</span>
+        </label>
+        <label class="inline-flex items-center cursor-pointer">
+          <input
+            type="radio"
+            name="periode"
+            value="3"
+            class="form-radio text-indigo-600 h-4 w-4"
+          />
+          <span class="ml-2 text-gray-700">3 mois</span>
+        </label>
+        <label class="inline-flex items-center cursor-pointer">
+          <input
+            type="radio"
+            name="periode"
+            value="6"
+            class="form-radio text-indigo-600 h-4 w-4"
+          />
+          <span class="ml-2 text-gray-700">6 mois</span>
+        </label>
+        <label class="inline-flex items-center cursor-pointer">
+          <input
+            type="radio"
+            name="periode"
+            value="12"
+            class="form-radio text-indigo-600 h-4 w-4"
+          />
+          <span class="ml-2 text-gray-700">1 an</span>
+        </label>
+        <label class="inline-flex items-center cursor-pointer">
+          <input
+            type="radio"
+            name="periode"
+            value="24"
+            class="form-radio text-indigo-600 h-4 w-4"
+          />
+          <span class="ml-2 text-gray-700">2 ans</span>
+        </label>
+        <label class="inline-flex items-center cursor-pointer">
+          <input
+            type="radio"
+            name="periode"
+            value="36"
+            class="form-radio text-indigo-600 h-4 w-4"
+          />
+          <span class="ml-2 text-gray-700">3 ans</span>
+        </label>
+        <label class="inline-flex items-center cursor-pointer">
+          <input
+            type="radio"
+            name="periode"
+            value="60"
+            class="form-radio text-indigo-600 h-4 w-4"
+          />
+          <span class="ml-2 text-gray-700">5 ans</span>
+        </label>
+      </section>
+
+      <div id="loading-indicator" class="text-center my-8 hidden">
+        <div class="spinner"></div>
+        <p class="text-lg text-indigo-600 mt-2">Chargement des graphiques...</p>
+      </div>
+
+      <div id="error-message-area" class="text-center my-8 hidden">
+        <p class="text-xl text-red-600"></p>
+      </div>
+
+      <section id="charts-area" class="hidden">
+        <div id="boursier-charts-section">
+          <h2 class="text-2xl font-semibold mt-8 mb-4 text-gray-700">
+            Fonds d'investissement (Boursier.com)
+          </h2>
+          <div
+            id="boursier-graphs-container"
+            class="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            <!-- Boursier iframes will be injected here -->
+          </div>
+        </div>
+
+        <div id="justetf-charts-section">
+          <h2 class="text-2xl font-semibold mt-8 mb-4 text-gray-700">
+            Indices ETF (JustETF.com)
+          </h2>
+          <div
+            id="justetf-graphs-container"
+            class="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            <!-- JustETF charts will be injected here -->
+          </div>
+        </div>
+
+        <div id="boursorama-charts-section">
+          <h2 class="text-2xl font-semibold mt-8 mb-4 text-gray-700">
+            Indices (Boursorama.com)
+          </h2>
+          <div
+            id="boursorama-graphs-container"
+            class="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            <!-- Boursorama charts will be injected here -->
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const periodeRadios = document.querySelectorAll('input[name="periode"]');
+      const boursierContainer = document.getElementById(
+        "boursier-graphs-container"
+      );
+      const justEtfContainer = document.getElementById(
+        "justetf-graphs-container"
+      );
+      const boursoramaContainer = document.getElementById(
+        "boursorama-graphs-container"
+      );
+      const loadingIndicator = document.getElementById("loading-indicator");
+      const errorMessageDiv = document.getElementById("error-message-area");
+      const chartsArea = document.getElementById("charts-area");
+
+      let activeChartJsInstances = [];
+
+      function getTodayDateYYYYMMDD() {
+        const today = new Date();
+        return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
+          2,
+          "0"
+        )}-${String(today.getDate()).padStart(2, "0")}`;
+      }
+
+      async function fetchAndRenderGraphs(period) {
+        loadingIndicator.classList.remove("hidden");
+        chartsArea.classList.add("hidden");
+        errorMessageDiv.classList.add("hidden");
+        errorMessageDiv.querySelector("p").textContent = "";
+
+        activeChartJsInstances.forEach((chart) => chart.destroy());
+        activeChartJsInstances = [];
+        boursierContainer.innerHTML = "";
+        justEtfContainer.innerHTML = "";
+        boursoramaContainer.innerHTML = ""; // Clear boursorama container
+
+        try {
+          const response = await fetch(`/api/period/${period}`);
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Erreur HTTP ${response.status}: ${errorText}`);
+          }
+          const results = await response.json();
+
+          if (!results || results.length === 0) {
+            errorMessageDiv.querySelector("p").textContent =
+              "Aucune donnée reçue de l'API.";
+            errorMessageDiv.classList.remove("hidden");
+            return;
+          }
+
+          let boursierRenderedCount = 0;
+          let justEtfRenderedCount = 0;
+          let boursoramaRenderedCount = 0;
+
+          results.forEach((item, index) => {
+            if (!item) {
+              console.warn(`Item at index ${index} is null.`);
+              return;
+            }
+
+            const card = document.createElement("div");
+            card.className = "bg-white p-4 rounded-lg shadow-md";
+
+            const title = document.createElement("h3");
+            title.className =
+              "text-lg font-semibold mb-3 text-gray-700 truncate";
+            title.textContent = item.name || `Graphique ${index + 1}`;
+            card.appendChild(title);
+
+            let contentAddedToCard = false;
+
+            if (item.error) {
+              const errorP = document.createElement("p");
+              errorP.className = "text-red-500 text-sm";
+              errorP.textContent = `Erreur: ${item.error}`;
+              card.appendChild(errorP);
+              contentAddedToCard = true;
+            }
+
+            if (item.type === "boursier") {
+              if (item.iframe_url) {
+                const iframe = document.createElement("iframe");
+                let iframeSuccessfullyCreated = false;
+
+                try {
+                  const urlObject = new URL(item.iframe_url);
+
+                  let rawIframeSrc = urlObject.toString();
+                  // Boursier.com expects commas (,) and colons (:) to be unencoded in certain URL parameters.
+                  // The URL.toString() method percent-encodes them, so we decode them back here.
+                  const finalIframeSrc = rawIframeSrc
+                    .replace(/%2C/g, ",")
+                    .replace(/%3A/g, ":");
+                  iframe.src = finalIframeSrc;
+
+                  iframe.style.width = "100%";
+                  iframe.style.height = "350px";
+                  iframe.setAttribute("frameborder", "0");
+                  iframe.setAttribute("scrolling", "no");
+                  card.appendChild(iframe);
+                  iframeSuccessfullyCreated = true;
+                } catch (e) {
+                  console.error(
+                    `Client-side error processing iframe URL for ${
+                      item.name || "Boursier item"
+                    }: ${item.iframe_url}`,
+                    e
+                  );
+                  if (!item.error) {
+                    // Add client-side error only if no backend error already present
+                    const errorP = document.createElement("p");
+                    errorP.className = "text-red-500 text-sm";
+                    errorP.textContent = `Erreur: URL d'iframe invalide ou impossible à traiter.`;
+                    card.appendChild(errorP);
+                  }
+                }
+
+                if (iframeSuccessfullyCreated) {
+                  boursierContainer.appendChild(card);
+                  boursierRenderedCount++;
+                  contentAddedToCard = true; // Mark that card has content and is handled
+                } else if (item.error || card.querySelector(".text-red-500")) {
+                  // If iframe creation failed but card already has an error (backend or client-side)
+                  boursierContainer.appendChild(card);
+                  contentAddedToCard = true;
+                }
+              } else if (!item.error) {
+                // No iframe_url and no backend error
+                const noDataP = document.createElement("p");
+                noDataP.className = "text-gray-500 text-sm";
+                noDataP.textContent =
+                  "Données insuffisantes pour afficher ce graphique (iframe).";
+                card.appendChild(noDataP);
+                contentAddedToCard = true;
+              }
+              if (contentAddedToCard && !boursierContainer.contains(card)) {
+                boursierContainer.appendChild(card);
+              }
+            } else if (item.type === "justetf" || item.type === "boursorama") {
+              if (item.series && item.series.length > 0) {
+                if (item.type === "justetf" && item.performance) {
+                  const performanceDiv = document.createElement("div");
+                  performanceDiv.className = "mb-2 text-sm text-gray-600";
+                  performanceDiv.textContent = `Performance: ${
+                    item.performance?.localized || "N/A"
+                  }`;
+                  card.appendChild(performanceDiv);
+                }
+
+                const chartContainerDiv = document.createElement("div");
+                chartContainerDiv.className = "chart-container";
+                const canvas = document.createElement("canvas");
+                canvas.id = `${item.type}Chart-${
+                  item.isin || item.name.replace(/\s+/g, "-") || index
+                }`;
+                chartContainerDiv.appendChild(canvas);
+                card.appendChild(chartContainerDiv);
+
+                const labels = item.series.map((p) =>
+                  new Date(p.date).toLocaleDateString("fr-FR", {
+                    // p.date is string for JustETF, timestamp for Boursorama
+                    day: "numeric",
+                    month: "short",
+                  })
+                );
+                const dataPoints = item.series.map((p) => p.value.raw);
+
+                // Déterminer la valeur de référence (premier point) et les couleurs
+                const referenceValue =
+                  dataPoints.length > 0 ? dataPoints[0] : null;
+
+                const defaultLineColor =
+                  item.type === "justetf"
+                    ? "rgb(75, 192, 192)"
+                    : "rgb(255, 99, 132)";
+                const defaultFillColor =
+                  item.type === "justetf"
+                    ? "rgba(75, 192, 192, 0.2)"
+                    : "rgba(255, 99, 132, 0.2)";
+                const redColor = "rgb(255, 0, 0)";
+                const redFillColor = "rgba(255, 0, 0, 0.2)";
+
+                const pointBackgroundColors = [];
+                const pointBorderColors = [];
+
+                dataPoints.forEach((value) => {
+                  const isBelowReference =
+                    referenceValue !== null && value < referenceValue;
+                  pointBackgroundColors.push(
+                    isBelowReference ? redColor : defaultLineColor
+                  );
+                  pointBorderColors.push(
+                    isBelowReference ? redColor : defaultLineColor
+                  );
+                });
+
+                const chart = new Chart(canvas.getContext("2d"), {
+                  type: "line",
+                  data: {
+                    labels: labels,
+                    datasets: [
+                      {
+                        label: `Valeur (${
+                          item.name ||
+                          (item.type === "justetf" ? item.isin : "Indice")
+                        })`,
+                        data: dataPoints,
+                        tension: 0.1,
+                        fill: true,
+                        pointBackgroundColor: pointBackgroundColors,
+                        pointBorderColor: pointBorderColors,
+                        segment: {
+                          borderColor: (ctx) => {
+                            // ctx.p1 est le point de fin du segment.
+                            // Si la valeur de p1 est inférieure à la référence, le segment est rouge.
+                            if (
+                              referenceValue !== null &&
+                              ctx.p1.parsed.y < referenceValue
+                            ) {
+                              return redColor;
+                            }
+                            return defaultLineColor;
+                          },
+                          backgroundColor: (ctx) => {
+                            if (
+                              referenceValue !== null &&
+                              ctx.p1.parsed.y < referenceValue
+                            ) {
+                              return redFillColor;
+                            }
+                            return defaultFillColor;
+                          },
+                        },
+                      },
+                    ],
+                  },
+                  options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                      x: { ticks: { autoSkip: true, maxTicksLimit: 10 } },
+                      y: { beginAtZero: false },
+                    },
+                    plugins: {
+                      legend: { display: true, position: "bottom" },
+                      tooltip: {
+                        callbacks: {
+                          title: (tooltipItems) => {
+                            const idx = tooltipItems[0].dataIndex;
+                            const dateInput = item.series[idx].date;
+                            const d = new Date(dateInput);
+                            const isDateTime =
+                              typeof dateInput === "string" &&
+                              dateInput.includes("T");
+                            const opts = {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                              ...(isDateTime && {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }),
+                            };
+                            return d.toLocaleString("fr-FR", opts);
+                          },
+                        },
+                      },
+                    },
+                  },
+                });
+                activeChartJsInstances.push(chart);
+                contentAddedToCard = true;
+
+                if (item.type === "justetf") {
+                  justEtfRenderedCount++;
+                } else {
+                  // boursorama
+                  boursoramaRenderedCount++;
+                }
+              } else if (!item.error) {
+                // No series and no backend error
+                const noDataP = document.createElement("p");
+                noDataP.className = "text-gray-500 text-sm";
+                noDataP.textContent =
+                  "Données de série insuffisantes pour afficher ce graphique.";
+                card.appendChild(noDataP);
+                contentAddedToCard = true;
+              }
+
+              if (contentAddedToCard) {
+                if (
+                  item.type === "justetf" &&
+                  !justEtfContainer.contains(card)
+                ) {
+                  justEtfContainer.appendChild(card);
+                } else if (
+                  item.type === "boursorama" &&
+                  !boursoramaContainer.contains(card)
+                ) {
+                  boursoramaContainer.appendChild(card);
+                }
+              }
+            }
+          });
+
+          document.getElementById("boursier-charts-section").style.display =
+            boursierContainer.children.length > 0 ? "" : "none";
+          document.getElementById("justetf-charts-section").style.display =
+            justEtfContainer.children.length > 0 ? "" : "none";
+          document.getElementById("boursorama-charts-section").style.display =
+            boursoramaContainer.children.length > 0 ? "" : "none";
+        } catch (error) {
+          console.error("Erreur lors du chargement des graphiques:", error);
+          errorMessageDiv.querySelector(
+            "p"
+          ).textContent = `Erreur: ${error.message}. Veuillez réessayer.`;
+          errorMessageDiv.classList.remove("hidden");
+        } finally {
+          loadingIndicator.classList.add("hidden");
+          chartsArea.classList.remove("hidden");
+        }
+      }
+
+      periodeRadios.forEach((radio) => {
+        radio.addEventListener("change", (event) =>
+          fetchAndRenderGraphs(event.target.value)
+        );
+      });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const checkedRadio = document.querySelector(
+          'input[name="periode"]:checked'
+        );
+        if (checkedRadio) fetchAndRenderGraphs(checkedRadio.value);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+.chart-container {
+  position: relative;
+  margin: auto;
+  height: 400px; /* Default height for charts */
+  width: 100%;
+}
+#periode-selector label {
+  margin-right: 10px; /* Spacing for radio buttons */
+  margin-bottom: 10px;
+}
+/* Basic spinner */
+.spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+  border-radius: 50%;
+  height: 24px;
+  width: 24px;
+  border: 3px solid rgba(79, 70, 229, 0.3); /* indigo-600 opacity 30% */
+  border-top-color: rgb(79, 70, 229); /* indigo-600 */
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
