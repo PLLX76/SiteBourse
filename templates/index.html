@@ -315,10 +315,10 @@
                 const referenceValue =
                   dataPoints.length > 0 ? dataPoints[0] : null;
 
-                const defaultLineColor =
+                const defaultLineColor = // Using Tailwind colors for consistency
                   item.type === "justetf"
-                    ? "rgb(75, 192, 192)"
-                    : "rgb(255, 99, 132)";
+                    ? "rgb(16, 185, 129)" // teal-500
+                    : "rgb(99, 102, 241)"; // indigo-500
                 const defaultFillColor =
                   item.type === "justetf"
                     ? "rgba(75, 192, 192, 0.2)"
@@ -384,12 +384,26 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                      x: { ticks: { autoSkip: true, maxTicksLimit: 10 } },
+                      x: {
+                        ticks: {
+                          autoSkip: true,
+                          maxTicksLimit: 10,
+                          // Optional: Rotate labels if they overlap
+                          // maxRotation: 0,
+                          // minRotation: 0,
+                        },
+                      },
                       y: { beginAtZero: false },
                     },
                     plugins: {
                       legend: { display: true, position: "bottom" },
                       tooltip: {
+                        enabled: true,
+                        mode: "index",
+                        intersect: false,
+                        backgroundColor: "rgba(0,0,0,0.8)",
+                        titleFont: { size: 14, weight: "bold" },
+                        bodyFont: { size: 12 },
                         callbacks: {
                           title: (tooltipItems) => {
                             const idx = tooltipItems[0].dataIndex;
@@ -408,6 +422,12 @@
                               }),
                             };
                             return d.toLocaleString("fr-FR", opts);
+                          },
+                          label: (tooltipItem) => {
+                            const value = tooltipItem.parsed.y;
+                            return `${
+                              tooltipItem.dataset.label
+                            }: ${value.toFixed(2)}`; // Format value to 2 decimal places
                           },
                         },
                       },

@@ -123,28 +123,28 @@ def get_boursorama(url, period_val:int):
 
     length_days = 0
     if period_val == 0: # 15 days
-        length_days = 15
+        length_days = 30
     elif period_val == 1: # 1 month
         length_days = 30
     elif period_val == 3: # 3 months
         length_days = 90
     elif period_val == 6: # 6 months
         length_days = 180
-    elif period_val == 12: # 1 year (approx 260 trading days, Boursorama API might handle this)
-        length_days = 260 
+    elif period_val == 12: # 1 year
+        length_days = 365
     elif period_val == 24: # 2 years
-        length_days = 520
+        length_days = 730
     elif period_val == 36: # 3 years
-        length_days = 780
+        length_days = 1095
     elif period_val == 60: # 5 years
-        length_days = 1300 # Approx 5 * 260
+        length_days = 1825 # Approx 5 * 260
     else: # Default or unknown
         length_days = 30 # Default to 1 month
 
     # Boursorama API 'period' param: 0 for daily, 1 for weekly, etc. We want daily.
     boursorama_api_granularity_param = 0
     new_url = f"https://www.boursorama.com/bourse/action/graph/ws/GetTicksEOD?symbol={code}&length={length_days}&period={boursorama_api_granularity_param}&guid="
-    
+    print(new_url)
     try:
         response = scraper.get(new_url, headers=headers)
         response.raise_for_status()
