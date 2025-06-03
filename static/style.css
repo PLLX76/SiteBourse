@@ -1,12 +1,25 @@
+#periode-selector label {
+  margin-right: 10px;
+  cursor: pointer;
+}
+input[type="radio"].form-radio {
+  display: none;
+}
+input[type="radio"].form-radio:checked + span {
+  background-color: #3b82f6; /* Blue background on select */
+  color: #fff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px; /* pill shape */
+  font-weight: 600;
+}
+iframe:focus {
+  outline: none;
+}
 .chart-container {
   position: relative;
   margin: auto;
   height: 400px; /* Default height for charts */
   width: 100%;
-}
-#periode-selector label {
-  margin-right: 10px; /* Spacing for radio buttons */
-  margin-bottom: 10px;
 }
 /* Basic spinner */
 .spinner {
