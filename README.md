@@ -1,19 +1,19 @@
-# Site de Bourse Simplifié
+# Simplified Stock Market Website
 
-Ce projet est un site web simple qui permet d'afficher des informations boursières en utilisant Flask pour le backend et HTML pour le frontend. Il n'utilise pas de base de données et se base sur le web scraping pour récupérer les données boursières en temps réel.
+This project is a simple website that displays stock market information using Flask for the backend and HTML for the frontend. It does not use a database and relies on web scraping to fetch real-time stock data.
 
-## Fonctionnalités
+## Features
 
-- Affichage des cours de bourses actuels.
-- Web scraping pour la récupération des données.
+- Display of current stock prices.
+- Web scraping to retrieve data.
 
-## Sites Supportés
+## Supported Websites
 
 - JustETF
 - Boursier.com
 - Boursorama
 
-## Technologies Utilisées
+## Technologies Used
 
 - **Backend:** Flask (Python)
 - **Frontend:** HTML
@@ -21,43 +21,48 @@ Ce projet est un site web simple qui permet d'afficher des informations boursiè
 
 ## Installation
 
-1. **Cloner le dépôt:**
+1. **Clone the repository:**
 
    ```bash
    git clone https://github.com/PLLX76/SiteBourse.git
    cd SiteBourse
    ```
 
-2. **Créer un environnement virtuel (recommandé):**
+2. **Create a virtual environment (recommended):**
 
    ```bash
    python -m venv env
    ```
 
-3. **Activer l'environnement virtuel:**
+3. **Activate the virtual environment:**
 
-   - Sur Windows:
+   - On Windows:
+
      ```bash
      .\env\Scripts\activate
      ```
-   - Sur macOS et Linux:
+
+   - On macOS and Linux:
+
      ```bash
      source env/bin/activate
      ```
 
-4. **Installer les dépendances:**
+4. **Install the dependencies:**
+
    ```bash
    pip install -r requirements.txt
    ```
-   _(Un fichier `requirements.txt` sera créé contenant les dépendances nécessaires comme `Flask` et les bibliothèques de scraping)_
 
-## Utilisation
+   _(A `requirements.txt` file will be created containing the necessary dependencies such as `Flask` and scraping libraries)_
 
-1. **Exécuter l'application Flask:**
+## Usage
+
+1. **Run the Flask application:**
 
    ```bash
    python main.py
    ```
 
-2. **Accéder au site web:**
-   Ouvrez votre navigateur et accédez à `http://127.0.0.1:5000/` (ou l'adresse et le port indiqués par Flask).
+2. **Access the website:**
+   Open your browser and go to `http://127.0.0.1:5000/` (or the address and port provided by Flask).
