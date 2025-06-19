@@ -7,6 +7,12 @@ Ce projet est un site web simple qui permet d'afficher des informations boursiè
 - Affichage des cours de bourses actuels.
 - Web scraping pour la récupération des données.
 
+## Sites Supportés
+
+- JustETF
+- Boursier.com
+- Boursorama
+
 ## Technologies Utilisées
 
 - **Backend:** Flask (Python)
@@ -18,8 +24,8 @@ Ce projet est un site web simple qui permet d'afficher des informations boursiè
 1. **Cloner le dépôt:**
 
    ```bash
-   git clone <URL du dépôt>
-   cd <nom du dossier du dépôt>
+   git clone https://github.com/PLLX76/SiteBourse.git
+   cd SiteBourse
    ```
 
 2. **Créer un environnement virtuel (recommandé):**
